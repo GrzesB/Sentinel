@@ -87,7 +87,7 @@
     {
       "type": 1,
       "content": {
-        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons.",
+        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons. Layout change.",
         "style": "info"
       },
       "conditionalVisibility": {
