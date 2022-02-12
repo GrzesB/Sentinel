@@ -1,0 +1,423 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Estimated Sentinel cost\n---\nver. 1.0\n\nNo discounts are taken into the consideration. This is an estimated cost based on regular price specified below."
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "0399b1a0-1ef2-4a39-815d-656ae757fab2",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": " Time Range",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 2592000000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          },
+          {
+            "id": "f2b4d460-2868-4cc6-958b-975b092f2654",
+            "version": "KqlParameterItem/1.0",
+            "name": "Price",
+            "type": 1,
+            "description": "Price per GB (Sentinel + Log Analytics).",
+            "value": "4.71",
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "customWidth": "40",
+      "name": "parameters - 2"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union *\r\n| where TimeGenerated {TimeRange:query}\r\n| summarize Total = round((sumif(_BilledSize, _IsBillable==true) / 1000000000) * {Price}, 2)\r\n",
+        "size": 4,
+        "title": "Sentinel total cost",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "card",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "total",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true,
+                  "maximumFractionDigits": 2
+                }
+              }
+            }
+          ]
+        },
+        "textSettings": {
+          "style": "bignumber"
+        }
+      },
+      "customWidth": "30",
+      "name": "query - 3"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union *\r\n| where TimeGenerated {TimeRange:query}\r\n| summarize Size = format_bytes(sumif(_BilledSize, _IsBillable==true))",
+        "size": 4,
+        "title": "Ingested data",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "card",
+        "textSettings": {
+          "style": "bignumber"
+        }
+      },
+      "customWidth": "30",
+      "name": "query - 6"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "search * \r\n| where TimeGenerated between({TimeRange:start} .. {TimeRange:end})\r\n| where not(Type == 'SecurityAlert' and (ProviderName == 'ASI Scheduled Alerts' or ProviderName == 'CustomAlertRule')) \r\n| summarize Count=count() by Type, bin_at(TimeGenerated, 1h , now()), Computer\r\n| render columnchart ",
+        "size": 1,
+        "title": "Amount of events by group type",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 4"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": ""
+      },
+      "name": "text - 11",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "1b7bdf16-3568-4acb-a30d-d1d40da3dbf5",
+            "version": "KqlParameterItem/1.0",
+            "name": "ReferenceLine",
+            "label": "Reference line value [GB]",
+            "type": 1,
+            "description": "Enter number to draw a reference line.",
+            "isRequired": true,
+            "value": "10",
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 10"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union *\r\n| where TimeGenerated {TimeRange:query}\r\n| summarize ['Size [GB]'] = sumif(_BilledSize, _IsBillable==true)/1000000000 by bin(TimeGenerated, 1d)",
+        "size": 1,
+        "aggregation": 3,
+        "title": "Daily data ingestion [GB]",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart",
+        "chartSettings": {
+          "customThresholdLine": "{ReferenceLine}",
+          "customThresholdLineStyle": 2
+        }
+      },
+      "name": "query - 9"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": ""
+      },
+      "name": "text - 12",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union withsource=TableName1 *\n| where TimeGenerated {TimeRange:query}\n| summarize Entries = count(), Size = sum(_BilledSize), last_log = datetime_diff(\"second\",now(), max(TimeGenerated)), estimate  = sumif(_BilledSize, _IsBillable==true)  by TableName1, _IsBillable\n| project ['Table Name'] = TableName1, ['Table Size'] = Size, ['Table Entries'] = Entries,\n          ['Size per Entry'] = 1.0 * Size / Entries, ['IsBillable'] = _IsBillable, ['Last Record Received'] = last_log, ['Estimated Table Price'] =  (estimate/(1000*1000*1000)) * {Price}\n | order by ['Table Size']  desc\n\n ",
+        "size": 3,
+        "showAnalytics": true,
+        "title": "Data per table",
+        "exportFieldName": "Table Name",
+        "exportParameterName": "TableName",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Table Name",
+              "formatter": 0,
+              "tooltipFormat": {
+                "tooltip": "Click on table name to display additional details."
+              }
+            },
+            {
+              "columnMatch": "Table Size",
+              "formatter": 3,
+              "formatOptions": {
+                "palette": "yellowOrangeBrown"
+              },
+              "numberFormat": {
+                "unit": 36,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true,
+                  "minimumFractionDigits": 2,
+                  "maximumFractionDigits": 2
+                }
+              }
+            },
+            {
+              "columnMatch": "Table Entries",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "Size per Entry",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "IsBillable",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "True",
+                    "representation": "redBright",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "False",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "blue",
+                    "text": "{0}{1}"
+                  }
+                ]
+              }
+            },
+            {
+              "columnMatch": "Last Record Received",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 24,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2
+                }
+              }
+            },
+            {
+              "columnMatch": "Estimated Table Price",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true,
+                  "maximumFractionDigits": 2
+                }
+              }
+            }
+          ],
+          "labelSettings": [
+            {
+              "columnId": "Table Size",
+              "label": "Table Size"
+            },
+            {
+              "columnId": "Size per Entry",
+              "label": "Size per Entry [bytes]"
+            },
+            {
+              "columnId": "Last Record Received",
+              "label": "Last Record Received (ago)"
+            }
+          ]
+        }
+      },
+      "customWidth": "100",
+      "name": "query - 2",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "{TableName}\r\n| where TimeGenerated {TimeRange:value}\r\n| summarize IngestedMBytes = sum(_BilledSize)/1000/1000 by bin(TimeGenerated, 1d)\r\n| render timechart ",
+        "size": 0,
+        "title": "Amount of ingested MBytes for {TableName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "customWidth": "50",
+      "name": "query - 5",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange}\r\n| summarize Entries = count(), Size = format_bytes(sum(_BilledSize)), SizeBytes = sum(_BilledSize) by Activity\r\n| order by SizeBytes desc\r\n| project-away SizeBytes\r\n| take 10",
+        "size": 0,
+        "title": "Top 10 events from SecurityEvents table",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Entries",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            }
+          ],
+          "labelSettings": [
+            {
+              "columnId": "Activity",
+              "label": "Event ID"
+            },
+            {
+              "columnId": "Entries",
+              "label": "No. of Entries"
+            },
+            {
+              "columnId": "Size",
+              "label": "Size"
+            }
+          ]
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "TableName",
+        "comparison": "isEqualTo",
+        "value": "SecurityEvent"
+      },
+      "customWidth": "50",
+      "name": "query - 7",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "CommonSecurityLog\r\n| where TimeGenerated {TimeRange}\r\n| summarize \r\n    Entries = count(), \r\n    BilledSize = sum(_BilledSize) by DeviceVendor\r\n| extend ['Estimated Price'] = round((BilledSize / (1000 * 1000 * 1000)) * {Price}, 2)\r\n| extend Size = format_bytes(BilledSize)\r\n| project DeviceVendor, Entries, Size, ['Estimated Price']\r\n| order by Size desc \r\n| take 10\r\n",
+        "size": 0,
+        "title": "CustomSecurityLog - Top 10 vendors",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "conditionalVisibility": {
+        "parameterName": "TableName",
+        "comparison": "isEqualTo",
+        "value": "CommonSecurityLog"
+      },
+      "customWidth": "50",
+      "name": "query - 8",
+      "styleSettings": {
+        "showBorder": true
+      }
+    }
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

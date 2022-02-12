@@ -1,0 +1,316 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Failed logons\n---\nver. 1.1"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "cac4e26c-9cdc-42b2-9d9c-e6ab4cb17138",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time range",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 604800000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 1800000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          },
+          {
+            "id": "26588439-9c0a-4175-9833-9ab193918781",
+            "version": "KqlParameterItem/1.0",
+            "name": "ChangeLog",
+            "label": "Show change log",
+            "type": 10,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": []
+            },
+            "jsonData": "[\r\n { \"value\": \"Yes\", \"label\": \"Yes\"},\r\n { \"value\": \"No\", \"label\": \"No\", \"selected\":true }\r\n]"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons.",
+        "style": "info"
+      },
+      "conditionalVisibility": {
+        "parameterName": "ChangeLog",
+        "comparison": "isEqualTo",
+        "value": "Yes"
+      },
+      "name": "text - 9"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\r\n    | where IPAddress !in ('127.0.0.1', '::1')\r\n    | where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false)\r\n| make-series NumberOfFailedLogons = count() on TimeGenerated in range({TimeRange:start}, {TimeRange:end}, 1h)\r\n| extend (RSquare,Slope,Variance,RVariance,Interception,LineFit) = series_fit_line(NumberOfFailedLogons)\r\n| project TimeGenerated, NumberOfFailedLogons, LineFit",
+        "size": 1,
+        "aggregation": 3,
+        "title": "Number of failed logons by hour (with trend line)",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "timechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "NumberOfFailedLogons",
+              "label": "No. of Failed logons",
+              "color": "redBright"
+            },
+            {
+              "seriesName": "LineFit",
+              "label": "Trend",
+              "color": "blue"
+            }
+          ]
+        }
+      },
+      "name": "query - 7"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "b1688423-75ef-4bcd-9348-eb9d5599d4be",
+            "version": "KqlParameterItem/1.0",
+            "name": "NumberOfRecords",
+            "type": 1,
+            "isRequired": true,
+            "value": "50",
+            "typeSettings": {
+              "paramValidationRules": [
+                {
+                  "regExp": "^\\d*$",
+                  "match": true,
+                  "message": "Please enter number"
+                },
+                {
+                  "regExp": "^0$",
+                  "match": false,
+                  "message": "The number must be greater than 0"
+                }
+              ]
+            },
+            "label": "No. of records to display"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 8"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where ResultType !in (\"0\", \"50125\", \"50140\")\n| where IPAddress !in ('127.0.0.1', '::1')\n| where TimeGenerated {TimeRange:value}\n| where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\n| union (AADNonInteractiveUserSignInLogs\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\n    | where IPAddress !in ('127.0.0.1', '::1')\n    | where TimeGenerated {TimeRange:value}\n    | where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\n    )\n| summarize Interactive = countif(Category == \"SignInLogs\"), NonInteractive = countif(Category == \"NonInteractiveUserSignInLogs\") by UserPrincipalName\n| sort by Interactive, NonInteractive desc\n| take {NumberOfRecords}\n",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Total number of failed logons  - Top {NumberOfRecords} (select user to display details)",
+        "exportFieldName": "UserPrincipalName",
+        "exportParameterName": "AccountName",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "UserPrincipalName",
+              "formatter": 0,
+              "tooltipFormat": {
+                "tooltip": "Click to display details."
+              }
+            },
+            {
+              "columnMatch": "BadLogons",
+              "formatter": 1,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            }
+          ]
+        }
+      },
+      "customWidth": "50",
+      "name": "query - 2",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where UserPrincipalName =~ @\"{AccountName}\"\r\n    | where IPAddress !in ('127.0.0.1', '::1'))\r\n| summarize SuccesfullLogons = countif(ResultType in (\"0\", \"50125\", \"50140\")),\r\n    BadLogonsInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"SignInLogs\"), \r\n    BadLogonsNonInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"NonInteractiveUserSignInLogs\") by bin(TimeGenerated, 1d) ",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Logons accross time for {AccountName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "timechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "SuccesfullLogons",
+              "color": "blue"
+            },
+            {
+              "seriesName": "BadLogonsInteractive",
+              "color": "redBright"
+            },
+            {
+              "seriesName": "BadLogonsNonInteractive",
+              "color": "orange"
+            }
+          ]
+        }
+      },
+      "customWidth": "40",
+      "name": "query - 3",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where UserPrincipalName =~ @\"{AccountName}\"\r\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\r\n    | where IPAddress !in ('127.0.0.1', '::1')\r\n    | extend LocationDetails = todynamic(LocationDetails))\r\n| summarize FailedLogons = count() by IPAddress, Country = tostring(LocationDetails.countryOrRegion), \r\n    State = tostring(LocationDetails.state), City = tostring(LocationDetails.city)\r\n| project IPAddress, FailedLogons, Country, State, City\r\n| order by FailedLogons",
+        "size": 1,
+        "showAnalytics": true,
+        "title": "IP addresses list for {AccountName}",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "customWidth": "50",
+      "name": "query - 5",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where UserPrincipalName =~ @\"{AccountName}\"\r\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\r\n    | where IPAddress !in ('127.0.0.1', '::1'))\r\n| summarize FailedLogons = count() by IPAddress, bin(TimeGenerated, 1h)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Bad logons per source IP for {AccountName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "scatterchart"
+      },
+      "customWidth": "50",
+      "name": "query - 4",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| project TimeGenerated, UserPrincipalName, ResultType, ResultDescription, IPAddress, ResourceDisplayName, ClientAppUsed, \r\n    AuthenticationRequirement, AppDisplayName, Country = LocationDetails.countryOrRegion, City = LocationDetails.city\r\n| order by TimeGenerated desc ",
+        "size": 2,
+        "showAnalytics": true,
+        "title": "Event details for {AccountName} - Interactive",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "rowLimit": 500
+        }
+      },
+      "name": "query - 6"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AADNonInteractiveUserSignInLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| extend Location = todynamic(LocationDetails)\r\n| project TimeGenerated, UserPrincipalName, ResultType, ResultDescription, IPAddress, ResourceDisplayName, ClientAppUsed, \r\n    AuthenticationRequirement, AppDisplayName, Country = Location.countryOrRegion, City = Location.city\r\n| order by TimeGenerated desc ",
+        "size": 2,
+        "showAnalytics": true,
+        "title": "Event details for {AccountName} - Non Interactive",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "rowLimit": 500
+        }
+      },
+      "name": "query - 6 - Copy"
+    }
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

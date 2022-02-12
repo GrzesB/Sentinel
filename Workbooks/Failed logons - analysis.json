@@ -1,0 +1,265 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Failed logons\n---\nver. 1.0\n"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "cac4e26c-9cdc-42b2-9d9c-e6ab4cb17138",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time range",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 7776000000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 1800000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 2"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where EventID == 4625\r\n| make-series NumberOfFailedLogons = count() on TimeGenerated in range({TimeRange:start}, {TimeRange:end}, 1h)\r\n| extend (RSquare,Slope,Variance,RVariance,Interception,LineFit) = series_fit_line(NumberOfFailedLogons)\r\n| project TimeGenerated, NumberOfFailedLogons, LineFit",
+        "size": 1,
+        "aggregation": 3,
+        "title": "Number of failed logons by hour (with trend line)",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "timechart",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "NumberOfFailedLogons",
+              "label": "No. of Failed logons",
+              "color": "redBright"
+            },
+            {
+              "seriesName": "LineFit",
+              "label": "Trend",
+              "color": "blue"
+            }
+          ]
+        }
+      },
+      "name": "query - 7"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "b1688423-75ef-4bcd-9348-eb9d5599d4be",
+            "version": "KqlParameterItem/1.0",
+            "name": "NumberOfRecords",
+            "type": 1,
+            "isRequired": true,
+            "value": "50",
+            "typeSettings": {
+              "paramValidationRules": [
+                {
+                  "regExp": "^\\d*$",
+                  "match": true,
+                  "message": "Please enter number"
+                },
+                {
+                  "regExp": "^0$",
+                  "match": false,
+                  "message": "The number must be greater than 0"
+                }
+              ]
+            },
+            "label": "No. of records to display"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 8"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\n| where TimeGenerated {TimeRange:value}\n| where EventID == 4625\n| summarize BadLogons = count() by Account\n| sort by BadLogons desc\n| take {NumberOfRecords}",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Total number of failed logons  - Top {NumberOfRecords} (select user to display details)",
+        "exportFieldName": "Account",
+        "exportParameterName": "AccountName",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Account",
+              "formatter": 0,
+              "tooltipFormat": {
+                "tooltip": "Click on account name to display details. "
+              }
+            },
+            {
+              "columnMatch": "BadLogons",
+              "formatter": 1,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            }
+          ],
+          "labelSettings": [
+            {
+              "columnId": "BadLogons",
+              "label": "Bad Logons Count"
+            }
+          ]
+        }
+      },
+      "customWidth": "50",
+      "name": "query - 2",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| summarize BadLogons = countif(EventID == 4625), SuccesfullLogons = countif(EventID == 4624) by bin(TimeGenerated, 1d)\r\n| render timechart ",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Logons accross time for {AccountName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "chartSettings": {
+          "seriesLabelSettings": [
+            {
+              "seriesName": "BadLogons",
+              "color": "redBright"
+            },
+            {
+              "seriesName": "SuccesfullLogons",
+              "color": "blue"
+            }
+          ]
+        }
+      },
+      "customWidth": "40",
+      "name": "query - 3",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| summarize FailedLogons = count() by IpAddress, bin(TimeGenerated, 1h)\r\n| render timechart",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Bad logons per source IP for {AccountName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 4"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| summarize FailedLogons = count() by IpAddress\r\n| order by FailedLogons",
+        "size": 1,
+        "showAnalytics": true,
+        "title": "IP addresses list for {AccountName}",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 5"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| extend Reason = case(  \r\n    SubStatus == '0xc000005e', 'No logon servers available to service the logon request',  \r\n    SubStatus == '0xc0000062', 'Account name is not properly formatted',  \r\n    SubStatus == '0xc0000064', 'Account name does not exist',  \r\n    SubStatus == '0xc000006a', 'Incorrect password',    \r\n    SubStatus == '0xc000006d', 'Bad user name or password',  \r\n    SubStatus == '0xc000006f', 'User logon blocked by account restriction',  \r\n    SubStatus == '0xc000006f', 'User logon outside of restricted logon hours',  \r\n    SubStatus == '0xc0000070', 'User logon blocked by workstation restriction',  \r\n    SubStatus == '0xc0000071', 'Password has expired',  \r\n    SubStatus == '0xc0000072', 'Account is disabled',  \r\n    SubStatus == '0xc0000133', 'Clocks between DC and other computer too far out of sync',  \r\n    SubStatus == '0xc000015b', 'The user has not been granted the requested logon right at this machine',  \r\n    SubStatus == '0xc0000193', 'Account has expirated',  \r\n    SubStatus == '0xc0000224', 'User is required to change password at next logon',  \r\n    SubStatus == '0xc0000234', 'Account is currently locked out',  \r\n    strcat('Unknown reason substatus: ', SubStatus))\r\n| project TimeGenerated, Account, Reason, IpAddress, LogonTypeName, AuthenticationPackageName\r\n| order by TimeGenerated desc ",
+        "size": 2,
+        "showAnalytics": true,
+        "title": "Event details for {AccountName}",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "rowLimit": 500
+        }
+      },
+      "name": "query - 6"
+    }
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
