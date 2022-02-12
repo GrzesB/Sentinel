@@ -4,7 +4,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Failed logons\n---\nver. 1.0\n"
+        "json": "## Failed logons\n---\nver. 1.1\n"
       },
       "name": "text - 2"
     },
@@ -21,7 +21,7 @@
             "type": 4,
             "isRequired": true,
             "value": {
-              "durationMs": 7776000000
+              "durationMs": 604800000
             },
             "typeSettings": {
               "selectableValues": [
@@ -73,7 +73,19 @@
             "type": 1,
             "description": "samAccountName or UPN or part of the name",
             "isRequired": true,
-            "value": "admin"
+            "value": ""
+          },
+          {
+            "id": "30902214-e80e-4b44-b5e9-f123a8d5cb62",
+            "version": "KqlParameterItem/1.0",
+            "name": "ChangeLog",
+            "label": "Change log",
+            "type": 10,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": []
+            },
+            "jsonData": "[\r\n { \"value\": \"Yes\", \"label\": \"Yes\"},\r\n { \"value\": \"No\", \"label\": \"No\", \"selected\":true }\r\n]"
           }
         ],
         "style": "pills",
@@ -81,6 +93,18 @@
         "resourceType": "microsoft.operationalinsights/workspaces"
       },
       "name": "parameters - 2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Layout change."
+      },
+      "conditionalVisibility": {
+        "parameterName": "ChangeLog",
+        "comparison": "isEqualTo",
+        "value": "Yes"
+      },
+      "name": "text - 7"
     },
     {
       "type": 3,
@@ -157,19 +181,6 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| summarize FailedLogons = count() by IpAddress, bin(TimeGenerated, 1h)\r\n| render timechart",
-        "size": 0,
-        "showAnalytics": true,
-        "title": "Bad logons per source IP for {AccountName}",
-        "queryType": 0,
-        "resourceType": "microsoft.operationalinsights/workspaces"
-      },
-      "name": "query - 4"
-    },
-    {
-      "type": 3,
-      "content": {
-        "version": "KqlItem/1.0",
         "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| summarize FailedLogons = count() by IpAddress\r\n| order by FailedLogons",
         "size": 1,
         "showAnalytics": true,
@@ -179,14 +190,35 @@
         "queryType": 0,
         "resourceType": "microsoft.operationalinsights/workspaces"
       },
-      "customWidth": "70",
-      "name": "query - 5"
+      "customWidth": "50",
+      "name": "query - 5",
+      "styleSettings": {
+        "showBorder": true
+      }
     },
     {
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| extend Reason = case(  \r\n    SubStatus == '0xc000005e', 'No logon servers available to service the logon request',  \r\n    SubStatus == '0xc0000062', 'Account name is not properly formatted',  \r\n    SubStatus == '0xc0000064', 'Account name does not exist',  \r\n    SubStatus == '0xc000006a', 'Incorrect password',    \r\n    SubStatus == '0xc000006d', 'Bad user name or password',  \r\n    SubStatus == '0xc000006f', 'User logon blocked by account restriction',  \r\n    SubStatus == '0xc000006f', 'User logon outside of restricted logon hours',  \r\n    SubStatus == '0xc0000070', 'User logon blocked by workstation restriction',  \r\n    SubStatus == '0xc0000071', 'Password has expired',  \r\n    SubStatus == '0xc0000072', 'Account is disabled',  \r\n    SubStatus == '0xc0000133', 'Clocks between DC and other computer too far out of sync',  \r\n    SubStatus == '0xc000015b', 'The user has not been granted the requested logon right at this machine',  \r\n    SubStatus == '0xc0000193', 'Account has expirated',  \r\n    SubStatus == '0xc0000224', 'User is required to change password at next logon',  \r\n    SubStatus == '0xc0000234', 'Account is currently locked out',  \r\n    strcat('Unknown reason substatus: ', SubStatus))\r\n| project TimeGenerated, Account, Reason, IpAddress, LogonTypeName, AuthenticationPackageName\r\n| order by TimeGenerated desc ",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| summarize FailedLogons = count() by IpAddress, bin(TimeGenerated, 1h)\r\n",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Bad logons per source IP for {AccountName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "scatterchart"
+      },
+      "customWidth": "50",
+      "name": "query - 4",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| where EventID == 4625\r\n| extend Reason = case(  \r\n    SubStatus == '0xc000005e', 'No logon servers available to service the logon request',  \r\n    SubStatus == '0xc0000062', 'Account name is not properly formatted',  \r\n    SubStatus == '0xc0000064', 'Account name does not exist',  \r\n    SubStatus == '0xc000006a', 'Incorrect password',    \r\n    SubStatus == '0xc000006d', 'Bad user name or password',  \r\n    SubStatus == '0xc000006f', 'User logon blocked by account restriction',  \r\n    SubStatus == '0xc000006f', 'User logon outside of restricted logon hours',  \r\n    SubStatus == '0xc0000070', 'User logon blocked by workstation restriction',  \r\n    SubStatus == '0xc0000071', 'Password has expired',  \r\n    SubStatus == '0xc0000072', 'Account is disabled',  \r\n    SubStatus == '0xc0000133', 'Clocks between DC and other computer too far out of sync',  \r\n    SubStatus == '0xc000015b', 'The user has not been granted the requested logon right at this machine',  \r\n    SubStatus == '0xc0000193', 'Account has expirated',  \r\n    SubStatus == '0xc0000224', 'User is required to change password at next logon',  \r\n    SubStatus == '0xc0000234', 'Account is currently locked out',  \r\n    strcat('Unknown reason substatus: ', SubStatus))\r\n| project TimeGenerated, Account, Reason, IpAddress, WorkstationName, LogonTypeName, AuthenticationPackageName\r\n| order by TimeGenerated desc ",
         "size": 2,
         "showAnalytics": true,
         "title": "Event details for {AccountName}",
