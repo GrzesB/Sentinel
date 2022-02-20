@@ -41,7 +41,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-02-01
+# version 2022-02-20
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/AlertRules/LICENSE
 
 
@@ -168,8 +168,12 @@ $count = 0
 foreach ($rule in $rules)
 {
     $template = $templates | Where-Object {$_.name -eq $rule.alertRuleTemplateName}
-    if (($rule.templateVersion -ne $null) -and ($rule.templateVersion -ne $template.version))
+    if ($rule.templateVersion -ne $template.version)
     {
+        if ($null -eq $rule.templateVersion)
+        {
+            $rule.templateVersion = "Not set"
+        }
         $ruleToUpdate = [PSCustomObject]@{
             displayName = $rule.displayName
             ruleVersion = $rule.templateVersion
