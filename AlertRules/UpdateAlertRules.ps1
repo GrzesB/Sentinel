@@ -48,7 +48,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-02-01
+# version 2022-03-07
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/AlertRules/LICENSE
 
 
@@ -76,7 +76,7 @@ function Get-SentinelAlertRuleTemplate
     foreach ($template in $values)
     {
         $rule = [PSCustomObject]@{
-            displayName = $template.properties.displayName
+            displayName = $template.properties.displayName.Trim('.')
             name = $template.Name
             kind = $template.kind
             properties = $template.properties
@@ -103,7 +103,7 @@ function Get-SentinelAlertRule
     foreach ($alertRule in $values)
     {
         $rule = [PSCustomObject]@{
-            displayName = $alertRule.properties.displayName
+            displayName = $alertRule.properties.displayName.Trim('.')
             templateVersion = $alertRule.properties.templateVersion
             alertRuleTemplateName = $alertRule.properties.alertRuleTemplateName
             enabled = $alertRule.properties.enabled
@@ -224,10 +224,10 @@ if ($AlertRuleDisplayName -ne "")
 $ruleCount = 0
 foreach ($rule in $rules)
 {
-    if ($rule.alertRuleTemplateName -ne $null)
+    if ($null -ne $rule.alertRuleTemplateName)
     {
-        $template = $templates | Where-Object {($rule.alertRuleTemplateName -eq $_.name) -and ($rule.displayName -match ($_.displayName + "\.?"))}
-        if ($template -ne $null)
+        $template = $templates | Where-Object {$rule.alertRuleTemplateName -eq $_.name}
+        if ($rule.templateVersion -ne $template.version)
         {   
             $ruleCount++
             Write-Host "Updating rule '$($rule.displayName)'..." -ForegroundColor Green
@@ -235,7 +235,7 @@ foreach ($rule in $rules)
             $template.properties | Add-Member -MemberType NoteProperty -Name "enabled" -Value $rule.enabled -ErrorAction Stop
             $template.properties | Add-Member -MemberType NoteProperty -Name "templateVersion" -Value $template.version -ErrorAction Stop
             $propertiesToExclude = "alertRulesCreatedByTemplateCount", "status", "version", "lastUpdatedDateUTC", "createdDateUTC", "requiredDataConnectors"
-            if ($template.properties.techniques[0] -eq "")
+            if ($template.properties.techniques.Count -eq 0)
             {
                 $propertiesToExclude += "techniques"
             }    
@@ -267,9 +267,13 @@ foreach ($rule in $rules)
                 Write-Host "There was an error updating rule. Error code is: $($result.StatusCode) - $($result.StatusDescription)" -ForegroundColor Yellow
             }
         }
-        else 
+        elseif ($null -eq $template) 
         {
-            Write-Host "No template found for '$($rule.displayName)'..." -ForegroundColor Yellow
+            Write-Host "No template found for '$($rule.displayName)'." -ForegroundColor Yellow                
+        }
+        elseif ($rule.templateVersion -eq $template.version -and $AlertRuleDisplayName -ne "")
+        {
+            Write-Host "'$($rule.displayName)' - rule is up to date."              
         }
     }
 }

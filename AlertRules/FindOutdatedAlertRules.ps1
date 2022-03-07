@@ -41,7 +41,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-02-20
+# version 2022-03-07
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/AlertRules/LICENSE
 
 
@@ -68,7 +68,7 @@ function Get-SentinelAlertRuleTemplate
     foreach ($template in $values)
     {
         $rule = [PSCustomObject]@{
-            displayName = $template.properties.displayName
+            displayName = $template.properties.displayName.Trim('.')
             version = $template.properties.version
             name = $template.Name
             alertRulesCreatedByTemplateCount = $template.properties.alertRulesCreatedByTemplateCount
@@ -93,7 +93,7 @@ function Get-SentinelAlertRule
     foreach ($alertRule in $values)
     {
         $rule = [PSCustomObject]@{
-            displayName = $alertRule.properties.displayName
+            displayName = $alertRule.properties.displayName.Trim('.')
             templateVersion = $alertRule.properties.templateVersion
             alertRuleTemplateName = $alertRule.properties.alertRuleTemplateName
             enabled = $alertRule.properties.enabled
