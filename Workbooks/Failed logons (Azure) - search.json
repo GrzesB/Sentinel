@@ -4,7 +4,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Failed logons - search\n---\nver. 1.1"
+        "json": "## Failed Azure logons - search\n---\nver. 1.2"
       },
       "name": "text - 2"
     },
@@ -79,7 +79,7 @@
             "id": "26588439-9c0a-4175-9833-9ab193918781",
             "version": "KqlParameterItem/1.0",
             "name": "ChangeLog",
-            "label": "Show change log",
+            "label": "Release notes",
             "type": 10,
             "isRequired": true,
             "typeSettings": {
@@ -97,7 +97,7 @@
     {
       "type": 1,
       "content": {
-        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons. Layout change.",
+        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons.</br>\r\n1.2 - Added additional details for logon and IP. Bug fixes.",
         "style": "info"
       },
       "conditionalVisibility": {
@@ -114,7 +114,7 @@
         "query": "SigninLogs\n| where ResultType !in (\"0\", \"50125\", \"50140\")\n| where IPAddress !in ('127.0.0.1', '::1')\n| where TimeGenerated {TimeRange:value}\n| where UserPrincipalName contains \"{UserName}\"\n| union (AADNonInteractiveUserSignInLogs\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\n    | where IPAddress !in ('127.0.0.1', '::1')\n    | where TimeGenerated {TimeRange:value}\n    | where UserPrincipalName contains \"{UserName}\"\n    )\n| summarize Interactive = countif(Category == \"SignInLogs\"), NonInteractive = countif(Category == \"NonInteractiveUserSignInLogs\") by UserPrincipalName\n| sort by Interactive, NonInteractive desc\n",
         "size": 0,
         "showAnalytics": true,
-        "title": "Total number of failed logons  - Top {NumberOfRecords} (select user to display details)",
+        "title": "Failed logons for {UserName} (select user to display details)",
         "exportFieldName": "UserPrincipalName",
         "exportParameterName": "AccountName",
         "showExportToExcel": true,
@@ -189,9 +189,11 @@
       "content": {
         "version": "KqlItem/1.0",
         "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where UserPrincipalName =~ @\"{AccountName}\"\r\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\r\n    | where IPAddress !in ('127.0.0.1', '::1')\r\n    | extend LocationDetails = todynamic(LocationDetails))\r\n| summarize FailedLogons = count() by IPAddress, Country = tostring(LocationDetails.countryOrRegion), \r\n    State = tostring(LocationDetails.state), City = tostring(LocationDetails.city)\r\n| project IPAddress, FailedLogons, Country, State, City\r\n| order by FailedLogons",
-        "size": 1,
+        "size": 0,
         "showAnalytics": true,
         "title": "IP addresses list for {AccountName}",
+        "exportFieldName": "IPAddress",
+        "exportParameterName": "IPAddress",
         "showExportToExcel": true,
         "exportToExcelOptions": "all",
         "queryType": 0,
@@ -225,7 +227,22 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| project TimeGenerated, UserPrincipalName, ResultType, ResultDescription, IPAddress, ResourceDisplayName, ClientAppUsed, \r\n    AuthenticationRequirement, AppDisplayName, Country = LocationDetails.countryOrRegion, City = LocationDetails.city\r\n| order by TimeGenerated desc ",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where IPAddress == \"{IPAddress}\"\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where IPAddress == \"{IPAddress}\")\r\n| summarize SuccesfullLogons = countif(ResultType in (\"0\", \"50125\", \"50140\")),\r\n    BadLogonsInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"SignInLogs\"), \r\n    BadLogonsNonInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"NonInteractiveUserSignInLogs\") by UserPrincipalName",
+        "size": 0,
+        "title": "Other users loging from {IPAddress}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 9",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| project TimeGenerated, UserPrincipalName, ResultType, ResultDescription, IPAddress, ClientAppUsed, DeviceDisplayName = DeviceDetail.displayName, OperatingSystem = DeviceDetail.operatingSystem, DeviceTrust = DeviceDetail.trustType, AuthenticationRequirement, ResourceDisplayName, AppDisplayName, Country = LocationDetails.countryOrRegion, City = LocationDetails.city\r\n| order by TimeGenerated desc ",
         "size": 2,
         "showAnalytics": true,
         "title": "Event details for {AccountName} - Interactive",
@@ -237,13 +254,16 @@
           "rowLimit": 500
         }
       },
-      "name": "query - 6"
+      "name": "query - 6",
+      "styleSettings": {
+        "showBorder": true
+      }
     },
     {
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "AADNonInteractiveUserSignInLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| extend Location = todynamic(LocationDetails)\r\n| project TimeGenerated, UserPrincipalName, ResultType, ResultDescription, IPAddress, ResourceDisplayName, ClientAppUsed, \r\n    AuthenticationRequirement, AppDisplayName, Country = Location.countryOrRegion, City = Location.city\r\n| order by TimeGenerated desc ",
+        "query": "AADNonInteractiveUserSignInLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where ResultType !in (\"0\", \"50125\", \"50140\")\r\n| extend Location = todynamic(LocationDetails)\r\n| extend Device = todynamic(DeviceDetail)\r\n| project TimeGenerated, UserPrincipalName, ResultType, ResultDescription, IPAddress, ClientAppUsed, DeviceDisplayName = Device.displayName, OperatingSystem = Device.operatingSystem, DeviceTrust = Device.trustType, AuthenticationRequirement, AppDisplayName, ResourceDisplayName, Country = Location.countryOrRegion, City = Location.city\r\n| order by TimeGenerated desc ",
         "size": 2,
         "showAnalytics": true,
         "title": "Event details for {AccountName} - Non Interactive",
@@ -255,7 +275,10 @@
           "rowLimit": 500
         }
       },
-      "name": "query - 6 - Copy"
+      "name": "query - 6 - Copy",
+      "styleSettings": {
+        "showBorder": true
+      }
     }
   ],
   "fromTemplateId": "sentinel-UserWorkbook",
