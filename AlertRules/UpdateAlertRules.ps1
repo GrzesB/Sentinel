@@ -48,7 +48,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-03-07
+# version 2022-06-28
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/AlertRules/LICENSE
 
 
@@ -149,7 +149,7 @@ function Update-SentinelAlertRule
 #endregion
 
 # Main code
-$apiVersion = "2021-10-01-preview"
+$apiVersion = "2022-06-01-preview"
 
 # Check if required modules needs to be installed
 if ((Get-InstalledModule Az.Accounts -ErrorAction SilentlyContinue) -eq $null)
@@ -238,6 +238,10 @@ foreach ($rule in $rules)
             if ($template.properties.techniques.Count -eq 0)
             {
                 $propertiesToExclude += "techniques"
+            }
+            if ($template.properties.sentinelEntitiesMappings.Count -eq 0)
+            {
+                $propertiesToExclude += "sentinelEntitiesMappings"
             }    
             $template.properties = $template.properties | Select-Object * -ExcludeProperty $propertiesToExclude
             if ("suppressionEnabled" -notin $template.properties.PSObject.Properties.Name)
