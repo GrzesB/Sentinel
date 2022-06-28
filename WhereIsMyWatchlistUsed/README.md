@@ -8,7 +8,7 @@ Requirements - PowerShell modules:
 **WhereIsMyWatchlistUsed.ps1** script looks for Watchlists defined in Microsoft Sentinel and then looks for alert rules that are using these watchlists.  
 <br />
 
-![Example](https://github.com/GrzesB/Sentinel/blob/master/IMG/WhereIsMyWatchlistUsed.png)
+![Example](https://github.com/GrzesB/Sentinel/blob/master/IMG/whereismywatchlistused.png)
 
 <br />
 To get detailed help about running the script call Get-Help cmdlet, i.e.:
