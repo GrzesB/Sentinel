@@ -41,7 +41,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-04-07
+# version 2022-07-25
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/WhereIsMyWatchlistUsed/LICENSE
 
 
@@ -49,7 +49,7 @@
 param (
     [Parameter(Mandatory=$true)] [string] $ResourceGroupName,
     [Parameter(Mandatory=$true)] [string] $WorkspaceName,
-    [Parameter(Mandatory=$false)] [string] $SubscriptionName,
+    [Parameter(Mandatory=$false)] [string] $SubscriptionName = "",
     [Parameter(Mandatory=$false)] [switch] $SkipAuthentication
 )
 
