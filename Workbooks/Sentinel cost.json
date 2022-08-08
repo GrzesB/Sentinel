@@ -4,9 +4,17 @@
     {
       "type": 1,
       "content": {
-        "json": "## Estimated Sentinel cost\n---\nver. 1.0\n\nNo discounts are taken into the consideration. This is an estimated cost based on regular price specified below."
+        "json": "## Estimated Sentinel cost\n---\nver. 1.01"
       },
       "name": "text - 2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "No discounts are taken into the consideration. This is an estimated cost based on regular price specified below.",
+        "style": "warning"
+      },
+      "name": "text - 2 - Copy"
     },
     {
       "type": 9,
@@ -334,13 +342,14 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "{TableName}\r\n| where TimeGenerated {TimeRange:value}\r\n| summarize IngestedMBytes = sum(_BilledSize)/1000/1000 by bin(TimeGenerated, 1d)\r\n| render timechart ",
+        "query": "{TableName}\r\n| where TimeGenerated {TimeRange:value}\r\n| summarize IngestedMBytes = sum(_BilledSize)/1000/1000 by bin(TimeGenerated, 1d)",
         "size": 0,
         "title": "Amount of ingested MBytes for {TableName}",
         "queryType": 0,
-        "resourceType": "microsoft.operationalinsights/workspaces"
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
       },
-      "customWidth": "50",
+      "customWidth": "40",
       "name": "query - 5",
       "styleSettings": {
         "showBorder": true
@@ -350,7 +359,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange}\r\n| summarize Entries = count(), Size = format_bytes(sum(_BilledSize)), SizeBytes = sum(_BilledSize) by Activity\r\n| order by SizeBytes desc\r\n| project-away SizeBytes\r\n| take 10",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange}\r\n| summarize Entries = count(), Size = format_bytes(sum(_BilledSize)), SizeBytes = sum(_BilledSize) by Activity\r\n| join (\r\n    SecurityEvent\r\n    | where TimeGenerated {TimeRange}\r\n    | summarize EntriesByComp = count() by Activity, Computer\r\n    | summarize arg_max(EntriesByComp, *) by Activity\r\n)\r\non Activity\r\n| order by SizeBytes desc\r\n| project Activity, Entries, Size, [\"Top Computer\"] = Computer, [\"Ent. by Top Comp.\"] = EntriesByComp\r\n| take 10",
         "size": 0,
         "title": "Top 10 events from SecurityEvents table",
         "queryType": 0,
@@ -360,6 +369,20 @@
             {
               "columnMatch": "Entries",
               "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "Ent. by Top Comp.",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "5%"
+              },
               "numberFormat": {
                 "unit": 0,
                 "options": {
@@ -390,7 +413,7 @@
         "comparison": "isEqualTo",
         "value": "SecurityEvent"
       },
-      "customWidth": "50",
+      "customWidth": "60",
       "name": "query - 7",
       "styleSettings": {
         "showBorder": true
@@ -413,6 +436,108 @@
       },
       "customWidth": "50",
       "name": "query - 8",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "DnsEvents\r\n| where TimeGenerated {TimeRange}\r\n| where SubType == \"LookupQuery\"\r\n| summarize Entries = count(), Size = format_bytes(sum(_BilledSize)), SizeBytes = sum(_BilledSize) by Name\r\n| join (\r\n    DnsEvents\r\n    | where TimeGenerated {TimeRange}\r\n    | where SubType == \"LookupQuery\"\r\n    | summarize Queries = count() by Name, ClientIP\r\n    | summarize arg_max(Queries, *) by Name\r\n    )\r\n    on Name\r\n| order by SizeBytes desc \r\n| project Name, Entries, Size, [\"Top Client\"] = ClientIP, [\"Ent. by Top Client\"] = Queries \r\n| take 10",
+        "size": 0,
+        "title": "Top 10 events from DnsEvents table",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "Entries",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "Size",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 4,
+                "options": {
+                  "style": "decimal"
+                }
+              }
+            },
+            {
+              "columnMatch": "Ent. by Top Client",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "20%"
+              },
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "Queries by Contributor",
+              "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "20%"
+              },
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            }
+          ],
+          "labelSettings": [
+            {
+              "columnId": "Name",
+              "label": "DNS Record"
+            }
+          ]
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "TableName",
+        "comparison": "isEqualTo",
+        "value": "DnsEvents"
+      },
+      "customWidth": "60",
+      "name": "query - 13",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange}\r\n| summarize Entries = count(), Size = format_bytes(sum(_BilledSize)), SizeBytes = sum(_BilledSize) by ResultType\r\n| join (\r\n    SigninLogs\r\n    | where TimeGenerated {TimeRange}\r\n    | summarize EntriesByIP = count() by ResultType, IPAddress\r\n    | summarize arg_max(EntriesByIP, *) by ResultType\r\n)\r\non ResultType\r\n| order by SizeBytes desc\r\n| extend ResultDescription = iif(ResultType in (\"0\", \"50125\", \"50140\"), \"Success\", \"Failure\")\r\n| project ResultType, ResultDescription, Entries, Size, [\"Top IP\"] = IPAddress, [\"Ent. by Top IP.\"] = EntriesByIP\r\n| take 10",
+        "size": 0,
+        "showAnalytics": true,
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "conditionalVisibility": {
+        "parameterName": "TableName",
+        "comparison": "isEqualTo",
+        "value": "SigninLogs"
+      },
+      "customWidth": "60",
+      "name": "query - 15",
       "styleSettings": {
         "showBorder": true
       }
