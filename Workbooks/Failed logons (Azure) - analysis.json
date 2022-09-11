@@ -4,7 +4,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Failed logons\n---\nver. 1.2"
+        "json": "## Failed logons\n---\nver. 1.3"
       },
       "name": "text - 2"
     },
@@ -87,7 +87,7 @@
     {
       "type": 1,
       "content": {
-        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons.</br>\r\n1.2 - Added additional logon and IP details. Bug fixes.",
+        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Added data for non-interactive logons.</br>\r\n1.2 - Added additional logon and IP details. Bug fixes.</br>\r\n1.3 - Improved graphs.",
         "style": "info"
       },
       "conditionalVisibility": {
@@ -164,7 +164,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SigninLogs\n| where ResultType !in (\"0\", \"50125\", \"50140\")\n| where IPAddress !in ('127.0.0.1', '::1')\n| where TimeGenerated {TimeRange:value}\n| where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\n| union (AADNonInteractiveUserSignInLogs\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\n    | where IPAddress !in ('127.0.0.1', '::1')\n    | where TimeGenerated {TimeRange:value}\n    | where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\n    )\n| summarize Interactive = countif(Category == \"SignInLogs\"), NonInteractive = countif(Category == \"NonInteractiveUserSignInLogs\"), BadLogons=count() by UserPrincipalName\n| sort by Interactive, NonInteractive desc\n| take {NumberOfRecords}\n",
+        "query": "SigninLogs\n| where ResultType !in (\"0\", \"50125\", \"50140\")\n| where IPAddress !in ('127.0.0.1', '::1')\n| where TimeGenerated {TimeRange:value}\n| where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\n| union (AADNonInteractiveUserSignInLogs\n    | where ResultType !in (\"0\", \"50125\", \"50140\")\n    | where IPAddress !in ('127.0.0.1', '::1')\n    | where TimeGenerated {TimeRange:value}\n    | where (UserPrincipalName matches regex @\"^\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}\") == false\n    )\n| summarize Interactive = countif(Category == \"SignInLogs\"), NonInteractive = countif(Category == \"NonInteractiveUserSignInLogs\"), Summary=count() by UserPrincipalName\n| sort by Summary desc\n| take {NumberOfRecords}\n",
         "size": 0,
         "showAnalytics": true,
         "title": "Total number of failed logons  - Top {NumberOfRecords} (select user to display details)",
@@ -206,8 +206,11 @@
               }
             },
             {
-              "columnMatch": "BadLogons",
+              "columnMatch": "Summary",
               "formatter": 0,
+              "formatOptions": {
+                "customColumnWidthSetting": "10%"
+              },
               "numberFormat": {
                 "unit": 0,
                 "options": {
@@ -229,7 +232,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where UserPrincipalName =~ @\"{AccountName}\"\r\n    | where IPAddress !in ('127.0.0.1', '::1'))\r\n| summarize SuccesfullLogons = countif(ResultType in (\"0\", \"50125\", \"50140\")),\r\n    BadLogonsInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"SignInLogs\"), \r\n    BadLogonsNonInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"NonInteractiveUserSignInLogs\") by bin(TimeGenerated, 1d) ",
+        "query": "SigninLogs\r\n| where TimeGenerated {TimeRange:value}\r\n| where UserPrincipalName =~ @\"{AccountName}\"\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| union (AADNonInteractiveUserSignInLogs\r\n    | where TimeGenerated {TimeRange:value}\r\n    | where UserPrincipalName =~ @\"{AccountName}\"\r\n    | where IPAddress !in ('127.0.0.1', '::1'))\r\n| make-series SuccesfullLogons = countif(ResultType in (\"0\", \"50125\", \"50140\")),\r\n    BadLogonsInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"SignInLogs\"), \r\n    BadLogonsNonInteractive = countif(ResultType !in (\"0\", \"50125\", \"50140\") and Category == \"NonInteractiveUserSignInLogs\") on TimeGenerated from {TimeRange:start} to {TimeRange:end} step 1d",
         "size": 0,
         "showAnalytics": true,
         "title": "Logons accross time for {AccountName}",

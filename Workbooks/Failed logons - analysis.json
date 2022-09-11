@@ -4,7 +4,7 @@
     {
       "type": 1,
       "content": {
-        "json": "## Failed logons\n---\nver. 1.1"
+        "json": "## Failed logons\n---\nver. 1.2"
       },
       "name": "text - 2"
     },
@@ -21,7 +21,7 @@
             "type": 4,
             "isRequired": true,
             "value": {
-              "durationMs": 604800000
+              "durationMs": 1209600000
             },
             "typeSettings": {
               "selectableValues": [
@@ -87,7 +87,7 @@
     {
       "type": 1,
       "content": {
-        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Layout change."
+        "json": "##### Change log\r\n1.0 - Initial version.<br/>\r\n1.1 - Layout change.</br>\r\n1.2 - Improved graphs."
       },
       "conditionalVisibility": {
         "parameterName": "ChangeLog",
@@ -212,7 +212,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| summarize BadLogons = countif(EventID == 4625), SuccesfullLogons = countif(EventID == 4624) by bin(TimeGenerated, 1d)\r\n| render timechart ",
+        "query": "SecurityEvent\r\n| where TimeGenerated {TimeRange:value}\r\n| where Account =~ @\"{AccountName}\"\r\n| make-series BadLogons = countif(EventID == 4625), SuccesfullLogons = countif(EventID == 4624) on TimeGenerated from {TimeRange:start} to {TimeRange:end} step 1d\r\n| render timechart ",
         "size": 0,
         "showAnalytics": true,
         "title": "Logons accross time for {AccountName}",
