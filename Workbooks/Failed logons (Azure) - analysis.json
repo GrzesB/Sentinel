@@ -2,11 +2,76 @@
   "version": "Notebook/1.0",
   "items": [
     {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "2249067d-2355-489a-a697-f256d9a10949",
+            "version": "KqlParameterItem/1.0",
+            "name": "CurrentVersion",
+            "type": 1,
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "1.4"
+          },
+          {
+            "id": "188cd3de-25f2-4c92-974f-efbc03908749",
+            "version": "KqlParameterItem/1.0",
+            "name": "UpdateAvailable",
+            "type": 1,
+            "query": "externaldata (\r\n    Workbook:string,\r\n    Version:string,\r\n    URL:string\r\n    ) \r\n[h\"https://raw.githubusercontent.com/GrzesB/Sentinel/master/.version/version_info.csv\"] \r\nwith (ignoreFirstRecord=true)\r\n| where Workbook == \"failed_logons\"\r\n| project Status = iff(toreal(Version) > toreal({CurrentVersion}), \"True\", \"False\")",
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          },
+          {
+            "id": "3ebcf4a4-a1de-4fc7-b94a-014a4ff323d4",
+            "version": "KqlParameterItem/1.0",
+            "name": "URL",
+            "type": 1,
+            "query": "externaldata (\r\n    Workbook:string,\r\n    Version:string,\r\n    URL:string\r\n    ) \r\n[h\"https://raw.githubusercontent.com/GrzesB/Sentinel/master/.version/version_info.csv\"] \r\nwith (ignoreFirstRecord=true)\r\n| where Workbook == \"failed_logons\"\r\n| project URL",
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 16"
+    },
+    {
       "type": 1,
       "content": {
-        "json": "## Failed logons\n---\nver. 1.3"
+        "json": "## Failed logons\n---\nver. {CurrentVersion}"
       },
       "name": "text - 2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "New version of the workbook is available at the following link: {URL}",
+        "style": "info"
+      },
+      "conditionalVisibility": {
+        "parameterName": "UpdateAvailable",
+        "comparison": "isEqualTo",
+        "value": "True"
+      },
+      "name": "text - 17",
+      "styleSettings": {
+        "showBorder": true
+      }
     },
     {
       "type": 9,
