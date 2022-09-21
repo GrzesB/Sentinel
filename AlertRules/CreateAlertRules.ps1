@@ -41,7 +41,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-02-01
+# version 2022-09-21
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/AlertRules/LICENSE
 
 
@@ -204,6 +204,10 @@ foreach ($rule in $selectedRules)
     if ($template.properties.techniques[0] -eq "")
     {
         $propertiesToExclude += "techniques"
+    }
+    if ($template.properties.sentinelEntitiesMappings.Count -eq 0)
+    {
+        $propertiesToExclude += "sentinelEntitiesMappings"
     }    
     $template.properties = $template.properties | Select-Object * -ExcludeProperty $propertiesToExclude
     if ("suppressionEnabled" -notin $template.properties.PSObject.Properties.Name)
