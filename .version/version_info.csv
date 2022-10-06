@@ -1,3 +1,4 @@
 Workbook,Version,URL
 sentinel_cost,1.1,https://github.com/GrzesB/Sentinel/blob/master/Workbooks/Sentinel%20cost.json
 failed_logons,1.4,https://github.com/GrzesB/Sentinel/blob/master/Workbooks/Failed%20logons%20-%20analysis.json
+logons_from_abroad,1.0,https://github.com/GrzesB/Sentinel/blob/master/Workbooks/Logons%20from%20foreign%20countries.json
