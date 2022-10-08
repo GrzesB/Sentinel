@@ -10,4 +10,5 @@
 **Failed logons (Azure) - analysis** - Overview of failed logons in Azure Active Directory environment.  
 <br/>
 **Failed logons (Azure) - search** - Workbook that allows to search for failed logons of a specific user in Azure Active Directory environment.  
-
+<br/>
+**Logons from foreign countries** - Workbook presents successful logons from foreign countries.  
