@@ -1,0 +1,293 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "2249067d-2355-489a-a697-f256d9a10949",
+            "version": "KqlParameterItem/1.0",
+            "name": "CurrentVersion",
+            "type": 1,
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": "1.0"
+          },
+          {
+            "id": "188cd3de-25f2-4c92-974f-efbc03908749",
+            "version": "KqlParameterItem/1.0",
+            "name": "UpdateAvailable",
+            "type": 1,
+            "query": "externaldata (\r\n    Workbook:string,\r\n    Version:string,\r\n    URL:string\r\n    ) \r\n[h\"https://raw.githubusercontent.com/GrzesB/Sentinel/master/.version/version_info.csv\"] \r\nwith (ignoreFirstRecord=true)\r\n| where Workbook == \"logons_from_abroad\"\r\n| project Status = iff(toreal(Version) > toreal({CurrentVersion}), \"True\", \"False\")",
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          },
+          {
+            "id": "3ebcf4a4-a1de-4fc7-b94a-014a4ff323d4",
+            "version": "KqlParameterItem/1.0",
+            "name": "URL",
+            "type": 1,
+            "query": "externaldata (\r\n    Workbook:string,\r\n    Version:string,\r\n    URL:string\r\n    ) \r\n[h\"https://raw.githubusercontent.com/GrzesB/Sentinel/master/.version/version_info.csv\"] \r\nwith (ignoreFirstRecord=true)\r\n| where Workbook == \"failed_logons\"\r\n| project URL",
+            "isHiddenWhenLocked": true,
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 16"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Succesful logons from foreign countries\n---\nver. {CurrentVersion}"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "c77f45f8-7edb-4494-be75-36f3700c4525",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time range",
+            "type": 4,
+            "isRequired": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ],
+              "allowCustom": true
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "value": {
+              "durationMs": 2419200000
+            }
+          },
+          {
+            "id": "6a75ea6f-54a6-4392-a378-217e4aad160e",
+            "version": "KqlParameterItem/1.0",
+            "name": "HomeCountry",
+            "label": "Home country code",
+            "type": 1,
+            "isRequired": true,
+            "typeSettings": {
+              "paramValidationRules": [
+                {
+                  "regExp": "^[A-Za-z]{2}$",
+                  "match": true,
+                  "message": "Enter two letters code (ISO 3166-1 Alpha-2)"
+                }
+              ]
+            },
+            "value": "PL"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 2"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "### Interactive logons",
+        "style": "info"
+      },
+      "name": "text - 10",
+      "styleSettings": {
+        "margin": "10px"
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\n| where TimeGenerated > {TimeRange:start} and TimeGenerated < {TimeRange:end}\n| where ResultType in (\"0\", \"50125\", \"50140\")\n| where IPAddress !in ('127.0.0.1', '::1')\n| where Location != \"{HomeCountry}\"\n| extend LocationDetail = strcat(Location, \"-\", todynamic(LocationDetails).state)\n| summarize Countries = make_set(Location) by UserPrincipalName\n| order by UserPrincipalName asc",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Interactive logons - locations per user",
+        "exportFieldName": "UserPrincipalName",
+        "exportParameterName": "UserPrincipalName",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 2",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| where TimeGenerated > {TimeRange:start} and TimeGenerated < {TimeRange:end}\r\n| where ResultType in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| where Location != \"{HomeCountry}\"\r\n| project TimeGenerated, Location, LocationDetails.city, IPAddress, AppDisplayName, ClientAppUsed, DeviceDisplayName = DeviceDetail.displayName, \r\n    OperatingSystem = DeviceDetail.operatingSystem, DeviceTrust = DeviceDetail.trustType, UserAgent\r\n| order by TimeGenerated desc\r\n",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Interactive logons - details for user {UserPrincipalName}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "rowLimit": 500
+        }
+      },
+      "name": "query - 4",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SigninLogs\r\n| where UserPrincipalName == \"{UserPrincipalName}\"\r\n| where TimeGenerated > {TimeRange:start} and TimeGenerated < {TimeRange:end}\r\n| where ResultType in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| where Location != \"{HomeCountry}\"\r\n| extend Latitude = tostring(todynamic(LocationDetails.geoCoordinates).latitude), Longitude = tostring(todynamic(LocationDetails.geoCoordinates).longitude)\r\n| extend Geo = strcat(Latitude, \":\", Longitude)\r\n| summarize Count = count() by Geo, Location, Latitude, Longitude\r\n| project Latitude, Longitude, Count, Location\r\n",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "map",
+        "mapSettings": {
+          "locInfo": "LatLong",
+          "locInfoColumn": "Location",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "sizeAggregation": "Sum",
+          "minSize": 10,
+          "labelSettings": "Location",
+          "legendMetric": "Count",
+          "legendAggregation": "Sum",
+          "itemColorSettings": null
+        }
+      },
+      "name": "query - 5"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": ""
+      },
+      "name": "text - 6",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "### Non-interactive logons",
+        "style": "info"
+      },
+      "name": "text - 10 - Copy",
+      "styleSettings": {
+        "margin": "10px"
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AADNonInteractiveUserSignInLogs\r\n| where TimeGenerated > {TimeRange:start} and TimeGenerated < {TimeRange:end}\r\n| where ResultType in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| where Location != \"{HomeCountry}\"\r\n| extend LocationDetail = strcat(Location, \"-\", todynamic(LocationDetails).state)\r\n| summarize Countries = make_set(Location) by UserPrincipalName\r\n| order by UserPrincipalName asc",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Non-interactive logons - locations per user",
+        "exportFieldName": "UserPrincipalName",
+        "exportParameterName": "UserPrincipalNameNI",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "query - 3",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AADNonInteractiveUserSignInLogs\r\n| where UserPrincipalName == \"{UserPrincipalNameNI}\"\r\n| where TimeGenerated > {TimeRange:start} and TimeGenerated < {TimeRange:end}\r\n| where ResultType in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| where Location != \"{HomeCountry}\"\r\n| extend Device = todynamic(DeviceDetail)\r\n| project TimeGenerated, Location, todynamic(LocationDetails).city, IPAddress, AppDisplayName, ClientAppUsed, DeviceDisplayName = Device.displayName,\r\n    OperatingSystem = Device.operatingSystem, DeviceTrust = Device.trustType\r\n| order by TimeGenerated desc\r\n",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Non-interactive logons - details for user {UserPrincipalNameNI}",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "rowLimit": 500
+        }
+      },
+      "name": "query - 4 - Copy",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AADNonInteractiveUserSignInLogs\r\n| where UserPrincipalName == \"{UserPrincipalNameNI}\"\r\n| where TimeGenerated > {TimeRange:start} and TimeGenerated < {TimeRange:end}\r\n| where ResultType in (\"0\", \"50125\", \"50140\")\r\n| where IPAddress !in ('127.0.0.1', '::1')\r\n| where Location != \"{HomeCountry}\"\r\n| extend Latitude = tostring(todynamic(todynamic(LocationDetails).geoCoordinates).latitude), Longitude = tostring(todynamic(todynamic(LocationDetails).geoCoordinates).longitude)\r\n| extend Geo = strcat(Latitude, \":\", Longitude)\r\n| summarize Count = count() by Geo, Location, Latitude, Longitude\r\n| project Latitude, Longitude, Count, Location\r\n",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "map",
+        "mapSettings": {
+          "locInfo": "LatLong",
+          "locInfoColumn": "Location",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "sizeAggregation": "Sum",
+          "minSize": 10,
+          "labelSettings": "Location",
+          "legendMetric": "Count",
+          "legendAggregation": "Sum",
+          "itemColorSettings": null
+        }
+      },
+      "name": "query - 5 - Copy"
+    }
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
