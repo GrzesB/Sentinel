@@ -41,7 +41,7 @@
     Authentication process is skipped (assumes authentication was already done, otherwise script will fail).
 #>
 
-# version 2022-09-21
+# version 2022-10-14
 # Script is distributed under MIT License - https://github.com/GrzesB/Sentinel/blob/master/AlertRules/LICENSE
 
 
@@ -116,7 +116,7 @@ function Create-SentinelAlertRule
     }
     catch 
     {
-        $resMsg = $_.Exception.Message
+        $resMsg = $_.Exception.Message + "`nPlease verify the analytics rule with portal wizard."
         $resCode = $_.Exception.Response.StatusCode.value__
     }
     finally
@@ -201,7 +201,11 @@ foreach ($rule in $selectedRules)
     $template.properties | Add-Member -MemberType NoteProperty -Name "enabled" -Value $true -ErrorAction Stop
     $template.properties | Add-Member -MemberType NoteProperty -Name "templateVersion" -Value $template.version -ErrorAction Stop
     $propertiesToExclude = "alertRulesCreatedByTemplateCount", "status", "version", "lastUpdatedDateUTC", "createdDateUTC", "requiredDataConnectors"
-    if ($template.properties.techniques[0] -eq "")
+    if ($template.properties.techniques.length -eq 0)
+    {
+        $propertiesToExclude += "techniques"
+    }
+    elseif ($template.properties.techniques[0] -eq "")
     {
         $propertiesToExclude += "techniques"
     }
