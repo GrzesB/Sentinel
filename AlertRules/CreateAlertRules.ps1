@@ -139,13 +139,6 @@ if ((Get-InstalledModule Az.Accounts -ErrorAction SilentlyContinue) -eq $null)
     exit 1
 }
 
-if ((Get-InstalledModule Az.SecurityInsights -ErrorAction SilentlyContinue) -eq $null)
-{
-    Write-Host "Az.SecurityInsights module must be installed." -ForegroundColor Yellow
-    exit 1
-}
-
-
 #region Authenticate to Azure
 if (-not $SkipAuthentication)
 {
