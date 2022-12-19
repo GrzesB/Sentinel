@@ -11,6 +11,8 @@ Requirements - PowerShell modules:
 
 **CreateAlertRules.ps1** - script to create alert rules from the templates.  
 
+**GetActiveRules.ps1** - script to list active alert rules.  
+
 <br />
 To get detailed help about running the script call Get-Help cmdlet, i.e.:
 
