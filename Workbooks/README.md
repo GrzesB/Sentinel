@@ -12,3 +12,5 @@
 **Failed logons (Azure) - search** - Workbook that allows to search for failed logons of a specific user in Azure Active Directory environment.  
 <br/>
 **Logons from foreign countries** - Workbook presents successful logons from foreign countries.  
+<br/>
+**Unused API Connections** - List of unused API Connections.  

@@ -1,0 +1,128 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Unused API Connections\n---\n\nWorkbook presents unused API Connections (not associated with any Logic App)"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "70e33495-73c7-4e39-809d-cbd1e0033640",
+            "version": "KqlParameterItem/1.0",
+            "name": "ShowSource",
+            "label": "Show source tables",
+            "type": 10,
+            "isRequired": true,
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "jsonData": "[\r\n { \"value\": \"Yes\", \"label\": \"Yes\"},\r\n { \"value\": \"No\", \"label\": \"No\", \"selected\":true }\r\n]",
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 4"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n    | where type == \"microsoft.logic/workflows\"\r\n    | mv-expand Connections = properties.parameters.$connections.value\r\n    | extend APIConnId = extract('\"connectionId\":\"(/subscriptions/.*/resourceGroups/.*/providers/Microsoft.Web/connections/[a-zA-Z0-9_-]*)', 1, tostring(Connections))\r\n",
+        "size": 0,
+        "title": "Logic Apps",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::all"
+        ],
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "APIConnId",
+              "formatter": 1
+            }
+          ],
+          "rowLimit": 1000
+        },
+        "sortBy": []
+      },
+      "conditionalVisibility": {
+        "parameterName": "ShowSource",
+        "comparison": "isEqualTo",
+        "value": "Yes"
+      },
+      "name": "LogicApps"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type == \"microsoft.web/connections\"\r\n| extend APIConnId = id\r\n| extend ConnectionStatus = properties.statuses[0].status, ConnectionAPI = properties.api.displayName, CreatedTime = properties.createdTime",
+        "size": 0,
+        "title": "API Connections",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::all"
+        ],
+        "gridSettings": {
+          "rowLimit": 1000
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "ShowSource",
+        "comparison": "isEqualTo",
+        "value": "Yes"
+      },
+      "name": "Connections"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "{\"version\":\"Merge/1.0\",\"merges\":[{\"id\":\"13993d7f-057c-4d23-8352-d5136be9902c\",\"mergeType\":\"leftanti\",\"leftTable\":\"Connections\",\"rightTable\":\"LogicApps\",\"leftColumn\":\"APIConnId\",\"rightColumn\":\"APIConnId\"}],\"projectRename\":[{\"originalName\":\"[Connections].APIConnId\",\"mergedName\":\"APIConnId\",\"fromId\":\"13993d7f-057c-4d23-8352-d5136be9902c\"},{\"originalName\":\"[Connections].location\",\"mergedName\":\"location\",\"fromId\":\"13993d7f-057c-4d23-8352-d5136be9902c\"},{\"originalName\":\"[Connections].resourceGroup\",\"mergedName\":\"resourceGroup\",\"fromId\":\"13993d7f-057c-4d23-8352-d5136be9902c\"},{\"originalName\":\"[Connections].subscriptionId\",\"mergedName\":\"subscriptionId\",\"fromId\":\"13993d7f-057c-4d23-8352-d5136be9902c\"},{\"originalName\":\"[Connections].ConnectionStatus\",\"mergedName\":\"ConnectionStatus\",\"fromId\":\"unknown\"},{\"originalName\":\"[Connections].ConnectionType\",\"mergedName\":\"ConnectionType\",\"fromId\":\"unknown\"},{\"originalName\":\"[Connections].ConnectionAPI\",\"mergedName\":\"ConnectionAPI\",\"fromId\":\"unknown\"},{\"originalName\":\"[Connections].CreatedTime\",\"mergedName\":\"CreatedTime\",\"fromId\":\"unknown\"},{\"originalName\":\"[Connections].tags\",\"mergedName\":\"tags\",\"fromId\":\"13993d7f-057c-4d23-8352-d5136be9902c\"},{\"originalName\":\"[Connections].type\"},{\"originalName\":\"[Connections].tenantId\"},{\"originalName\":\"[Connections].kind\"},{\"originalName\":\"[Connections].managedBy\"},{\"originalName\":\"[Connections].sku\"},{\"originalName\":\"[Connections].plan\"},{\"originalName\":\"[Connections].identity\"},{\"originalName\":\"[Connections].zones\"},{\"originalName\":\"[Connections].extendedLocation\"},{\"originalName\":\"[Connections].id\"},{\"originalName\":\"[Connections].properties\"},{\"originalName\":\"[Connections].name\"}]}",
+        "size": 2,
+        "title": "API Connections not used by Logic Apps",
+        "showExportToExcel": true,
+        "exportToExcelOptions": "all",
+        "queryType": 7,
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "ConnectionStatus",
+              "formatter": 1
+            },
+            {
+              "columnMatch": "ConnectionAPI",
+              "formatter": 1
+            },
+            {
+              "columnMatch": "CreatedTime",
+              "formatter": 1
+            }
+          ],
+          "rowLimit": 1000
+        }
+      },
+      "name": "query - 2",
+      "styleSettings": {
+        "showBorder": true
+      }
+    }
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
