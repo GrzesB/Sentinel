@@ -1,0 +1,328 @@
+{
+    "$schema":  "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":  "1.0.0.0",
+    "metadata":  {
+        "title":  "",
+        "description":  "",
+        "prerequisites":  "",
+        "postDeployment":  [
+        ],
+        "prerequisitesDeployTemplateFile":  "",
+        "lastUpdateTime":  "",
+        "entities":  [
+        ],
+        "tags":  [
+        ],
+        "support":  {
+            "tier":  "community",
+            "armtemplate":  "Generated from https://github.com/Azure/Azure-Sentinel/tree/master/Tools/Playbook-ARM-Template-Generator"
+        },
+        "author":  {
+            "name":  ""
+        }
+    },
+    "parameters":  {
+        "PlaybookName":  {
+            "defaultValue":  "ChangeNetworkConfigOfStorageAccount",
+            "type":  "string"
+        },
+        "WatchlistName":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for WatchlistName"
+            }
+        }
+    },
+    "variables":  {
+        "AzuremonitorlogsConnectionName":  "[concat('Azuremonitorlogs-', parameters('PlaybookName'))]",
+        "MicrosoftSentinelConnectionName":  "[concat('MicrosoftSentinel-', parameters('PlaybookName'))]"
+    },
+    "resources":  [
+        {
+            "properties":  {
+                "provisioningState":  "Succeeded",
+                "state":  "Enabled",
+                "definition":  {
+                    "$schema":  "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion":  "1.0.0.0",
+                    "parameters":  {
+                        "$connections":  {
+                            "defaultValue":  {
+                            },
+                            "type":  "Object"
+                        },
+                        "WatchlistName":  {
+                            "defaultValue":  "[parameters('WatchlistName')]",
+                            "type":  "string"
+                        }
+                    },
+                    "triggers":  {
+                        "Microsoft_Sentinel_incident":  {
+                            "type":  "ApiConnectionWebhook",
+                            "inputs":  {
+                                "body":  {
+                                    "callback_url":  "@{listCallbackUrl()}"
+                                },
+                                "host":  {
+                                    "connection":  {
+                                        "name":  "@parameters('$connections')['azuresentinel']['connectionId']"
+                                    }
+                                },
+                                "path":  "/incident-creation"
+                            }
+                        }
+                    },
+                    "actions":  {
+                        "For_each":  {
+                            "foreach":  "@triggerBody()?['object']?['properties']?['relatedEntities']",
+                            "actions":  {
+                                "Condition":  {
+                                    "actions":  {
+                                        "HTTP":  {
+                                            "runAfter":  {
+                                                "SetVariable-AclRequestBody":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Http",
+                                            "inputs":  {
+                                                "authentication":  {
+                                                    "type":  "ManagedServiceIdentity"
+                                                },
+                                                "body":  "@variables('AclRequestBody')",
+                                                "headers":  {
+                                                    "Content-Type":  "application/json"
+                                                },
+                                                "method":  "PATCH",
+                                                "uri":  "@variables('URL')"
+                                            }
+                                        },
+                                        "SetVariable-AclRequestBody":  {
+                                            "runAfter":  {
+                                                "SetVariable-URL":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "SetVariable",
+                                            "inputs":  {
+                                                "name":  "AclRequestBody",
+                                                "value":  "{\n  \"properties\": {\n    \"networkAcls\": {\n      \"bypass\": \"AzureServices\",\n      \"defaultAction\": \"Deny\",\n      \"ipRules\": @{variables('AllowedIPs')}\n    }\n  }\n}"
+                                            }
+                                        },
+                                        "SetVariable-URL":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "SetVariable",
+                                            "inputs":  {
+                                                "name":  "URL",
+                                                "value":  "@{concat('https://management.azure.com/', body('ParseJSON-Entity')?['properties']?['ResourceId'], '?api-version=2022-09-01')}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter":  {
+                                        "ParseJSON-Entity":  [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "expression":  {
+                                        "and":  [
+                                            {
+                                                "equals":  [
+                                                    "@body('ParseJSON-Entity')?['kind']",
+                                                    "AzureResource"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type":  "If"
+                                },
+                                "ParseJSON-Entity":  {
+                                    "runAfter":  {
+                                    },
+                                    "type":  "ParseJson",
+                                    "inputs":  {
+                                        "content":  "@items('For_each')",
+                                        "schema":  {
+                                            "properties":  {
+                                                "id":  {
+                                                    "type":  "string"
+                                                },
+                                                "kind":  {
+                                                    "type":  "string"
+                                                },
+                                                "name":  {
+                                                    "type":  "string"
+                                                },
+                                                "properties":  {
+                                                    "properties":  {
+                                                        "address":  {
+                                                            "type":  "string"
+                                                        },
+                                                        "friendlyName":  {
+                                                            "type":  "string"
+                                                        }
+                                                    },
+                                                    "type":  "object"
+                                                },
+                                                "type":  {
+                                                    "type":  "string"
+                                                }
+                                            },
+                                            "type":  "object"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter":  {
+                                "InitializeVariable-AllowedIPs":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Foreach"
+                        },
+                        "InitializeVariable-AllowedIPs":  {
+                            "runAfter":  {
+                                "RunQueryAndListResults-Watchlist":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "AllowedIPs",
+                                        "type":  "string",
+                                        "value":  "@{body('RunQueryAndListResults-Watchlist')?['value']}"
+                                    }
+                                ]
+                            }
+                        },
+                        "InitializeVariable-URL":  {
+                            "runAfter":  {
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "URL",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable":  {
+                            "runAfter":  {
+                                "InitializeVariable-URL":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "AclRequestBody",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "RunQueryAndListResults-Watchlist":  {
+                            "runAfter":  {
+                                "Initialize_variable":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ApiConnection",
+                            "inputs":  {
+                                "body":  "_GetWatchlist('@{parameters('WatchlistName')}')\n| project value = IPAddress, activity = \"Allow\"",
+                                "host":  {
+                                    "connection":  {
+                                        "name":  "@parameters('$connections')['azuremonitorlogs_1']['connectionId']"
+                                    }
+                                },
+                                "method":  "post",
+                                "path":  "/queryData",
+                                "queries":  {
+                                    "resourcegroups":  "ContosoSOC",
+                                    "resourcename":  "Sentinel",
+                                    "resourcetype":  "Log Analytics Workspace",
+                                    "subscriptions":  "ea7a75b1-757b-458a-a635-f19443dc27d0",
+                                    "timerange":  "Last 24 hours"
+                                }
+                            }
+                        }
+                    },
+                    "outputs":  {
+                    }
+                },
+                "parameters":  {
+                    "$connections":  {
+                        "value":  {
+                            "azuremonitorlogs_1":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('AzuremonitorlogsConnectionName'))]",
+                                "connectionName":  "[variables('AzuremonitorlogsConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuremonitorlogs')]"
+                            },
+                            "azuresentinel":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('MicrosoftSentinelConnectionName'))]",
+                                "connectionName":  "[variables('MicrosoftSentinelConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuresentinel')]",
+                                "connectionProperties":  {
+                                    "authentication":  {
+                                        "type":  "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "name":  "[parameters('PlaybookName')]",
+            "type":  "Microsoft.Logic/workflows",
+            "location":  "[resourceGroup().location]",
+            "identity":  {
+                "type":  "SystemAssigned"
+            },
+            "tags":  {
+                "hidden-SentinelTemplateName":  "ChangeNetworkConfigOfStorageAccount",
+                "hidden-SentinelTemplateVersion":  "1.0"
+            },
+            "apiVersion":  "2017-07-01",
+            "dependsOn":  [
+                "[resourceId('Microsoft.Web/connections', variables('AzuremonitorlogsConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', variables('MicrosoftSentinelConnectionName'))]"
+            ]
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('AzuremonitorlogsConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('AzuremonitorlogsConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuremonitorlogs')]"
+                }
+            }
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('MicrosoftSentinelConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('MicrosoftSentinelConnectionName')]",
+                "customParameterValues":  {
+                },
+                "parameterValueType":  "Alternative",
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuresentinel')]"
+                }
+            }
+        }
+    ]
+}

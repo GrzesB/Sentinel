@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/866f9d2d-9a76-4dff-a55d-6aae0bab51c6')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/866f9d2d-9a76-4dff-a55d-6aae0bab51c6')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "Wrong Storage Account network config",
+                "description": "",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "let networks = toscalar(_GetWatchlist(\"StorageAccountsAllowedIPs\")\n    | summarize make_set(IPAddress));\nlet AllEnabled = (\n    AzureActivity\n    | where OperationNameValue == \"MICROSOFT.STORAGE/STORAGEACCOUNTS/WRITE\"\n    | where ActivityStatusValue == \"Success\"\n    | extend parsedProperties = parse_json(tostring(todynamic(todynamic(Properties_d).responseBody))).properties\n    | extend publicNetworkAccess = tostring(parsedProperties.publicNetworkAccess)\n    | extend networkAcls = parsedProperties.networkAcls\n    | extend defaultAction = networkAcls.defaultAction\n    | extend ips = networkAcls.ipRules\n    | where publicNetworkAccess == \"Enabled\"\n    | project-away parsedProperties\n    | order by TimeGenerated desc \n    | project TimeGenerated, publicNetworkAccess, ips, defaultAction, _ResourceId);\nunion isfuzzy=true (\n    AllEnabled\n    | where defaultAction == \"Allow\"\n    | extend AllowedIP = \"0.0.0.0\"\n    ),\n    (\n    AllEnabled\n    | where defaultAction == \"Deny\"\n    | extend ips = todynamic(ips)\n    | mv-expand ips\n    | extend AllowedIP = tostring(ips.value)\n    | where ipv4_is_in_any_range(AllowedIP, networks) == false\n    )\n| project-away ips, defaultAction\n\n",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "techniques": [
+                    "T1190"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "AzureResource",
+                        "fieldMappings": [
+                            {
+                                "identifier": "ResourceId",
+                                "columnName": "_ResourceId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "AllowedIP"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
