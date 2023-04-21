@@ -8,7 +8,7 @@ Based on AuditLogs, changes to a storage account are detected and in case these 
 ### Playbook
 To deploy the playbook (_azuredeploy.json_), select the following button:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FGrzesB%2FAzure%2Fmaster%2FPlaybooks%2FChangeNetworkConfigOfStorageAccount%2Fazuredeploy.json%3Ftoken%3DGHSAT0AAAAAACBNFXSPTF6NWLPL5XUN34DYZBZLTUQ)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FGrzesB%2FSentinel%2Fmaster%2FPlaybooks%2FChangeNetworkConfigOfStorageAccount%2Fazuredeploy.json)
 
 ### Analytics rule
 Analytics rule template that can be imported is available as _analytic.json_ and can be imported from the Sentinel portal:</br></br>
