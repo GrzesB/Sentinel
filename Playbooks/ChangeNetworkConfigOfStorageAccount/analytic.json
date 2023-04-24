@@ -18,7 +18,7 @@
                 "description": "",
                 "severity": "Medium",
                 "enabled": true,
-                "query": "let networks = toscalar(_GetWatchlist(\"StorageAccountsAllowedIPs\")\n    | summarize make_set(IPAddress));\nlet AllEnabled = (\n    AzureActivity\n    | where OperationNameValue == \"MICROSOFT.STORAGE/STORAGEACCOUNTS/WRITE\"\n    | where ActivityStatusValue == \"Success\"\n    | extend parsedProperties = parse_json(tostring(todynamic(todynamic(Properties_d).responseBody))).properties\n    | extend publicNetworkAccess = tostring(parsedProperties.publicNetworkAccess)\n    | extend networkAcls = parsedProperties.networkAcls\n    | extend defaultAction = networkAcls.defaultAction\n    | extend ips = networkAcls.ipRules\n    | where publicNetworkAccess == \"Enabled\"\n    | project-away parsedProperties\n    | order by TimeGenerated desc \n    | project TimeGenerated, publicNetworkAccess, ips, defaultAction, _ResourceId);\nunion isfuzzy=true (\n    AllEnabled\n    | where defaultAction == \"Allow\"\n    | extend AllowedIP = \"0.0.0.0\"\n    ),\n    (\n    AllEnabled\n    | where defaultAction == \"Deny\"\n    | extend ips = todynamic(ips)\n    | mv-expand ips\n    | extend AllowedIP = tostring(ips.value)\n    | where ipv4_is_in_any_range(AllowedIP, networks) == false\n    )\n| project-away ips, defaultAction\n\n",
+                "query": "let networks = toscalar(_GetWatchlist(\"StorageAccountsAllowedIPs\")\n    | summarize make_set(IPAddress));\nlet AllEnabled = (\n    AzureActivity\n    | where OperationNameValue == \"MICROSOFT.STORAGE/STORAGEACCOUNTS/WRITE\"\n    | where ActivityStatusValue == \"Start\"\n    | extend parsedProperties = parse_json(tostring(todynamic(todynamic(Properties_d).requestbody))).properties\n    | extend publicNetworkAccess = tostring(parsedProperties.publicNetworkAccess)\n    | extend networkAcls = parsedProperties.networkAcls\n    | extend defaultAction = networkAcls.defaultAction\n    | extend ips = networkAcls.ipRules\n    | where publicNetworkAccess == \"Enabled\"\n    | project-away parsedProperties\n    | order by TimeGenerated desc \n    | project TimeGenerated, publicNetworkAccess, ips, defaultAction, _ResourceId, CorrelationId\n| join kind=inner (\n    AzureActivity\n    | where OperationNameValue == \"MICROSOFT.STORAGE/STORAGEACCOUNTS/WRITE\"\n    | where ActivityStatusValue == \"Success\"\n    )\n    on CorrelationId\n    );\nunion isfuzzy=true\n    (\n    AllEnabled\n    | where defaultAction == \"Allow\"\n    | extend AllowedIP = \"0.0.0.0\"\n    ),\n    (\n    AllEnabled\n    | where defaultAction == \"Deny\"\n    | extend ips = todynamic(ips)\n    | mv-expand ips\n    | extend AllowedIP = tostring(ips.value)\n    | where ipv4_is_in_any_range(AllowedIP, networks) == false\n    )\n| summarize arg_max(TimeGenerated, *) by CorrelationId\n| project TimeGenerated, publicNetworkAccess, AllowedIP, _ResourceId",
                 "queryFrequency": "P1D",
                 "queryPeriod": "P1D",
                 "triggerOperator": "GreaterThan",
@@ -26,12 +26,8 @@
                 "suppressionDuration": "PT5H",
                 "suppressionEnabled": false,
                 "startTimeUtc": null,
-                "tactics": [
-                    "InitialAccess"
-                ],
-                "techniques": [
-                    "T1190"
-                ],
+                "tactics": [],
+                "techniques": [],
                 "alertRuleTemplateName": null,
                 "incidentConfiguration": {
                     "createIncident": true,
