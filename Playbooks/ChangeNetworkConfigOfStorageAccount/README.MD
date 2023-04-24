@@ -21,7 +21,6 @@ IPAddress
 1.1.1.1
 2.2.2.2
 ```
-</br>
 
 ### Analytics rule
 Analytics rule template that can be imported is available as _analytic.json_ and can be imported from the Sentinel portal:</br></br>
