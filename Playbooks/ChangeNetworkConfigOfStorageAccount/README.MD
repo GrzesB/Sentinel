@@ -10,13 +10,22 @@ To deploy the playbook (_azuredeploy.json_), select the following button:
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FGrzesB%2FSentinel%2Fmaster%2FPlaybooks%2FChangeNetworkConfigOfStorageAccount%2Fazuredeploy.json)
 
+### Watchlist
+Watchlist should be created from a csv file and needs at least one column named _IPAddress_. Watchlist should be named _StorageAccountsAllowedIPs_, otherwise corresponding name should be changed in analytics rule and playbook.</br>
+Watchlist must be created before analytics rule, otherwise import of the rule will fail.
+</br>
+Contents of the csv should look like in the following example:
+```
+IPAddress
+1.2.3.4
+1.1.1.1
+2.2.2.2
+```
+</br>
+
 ### Analytics rule
 Analytics rule template that can be imported is available as _analytic.json_ and can be imported from the Sentinel portal:</br></br>
 ![Screenshot](img/import_rule.png)
-</br>
-
-### Watchlist
-Watchlist should be created from a csv file and needs at least one column named _IPAddress_. Watchlist should be named _StorageAccountsAllowedIPs_, otherwise corresponding name should be changed in analytics rule and playbook.
 </br></br></br>
 
 > **Note**</br>
