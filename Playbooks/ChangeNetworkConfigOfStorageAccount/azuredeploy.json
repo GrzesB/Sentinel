@@ -26,6 +26,24 @@
             "defaultValue":  "ChangeNetworkConfigOfStorageAccount",
             "type":  "string"
         },
+        "LogAnalyticsWorkspaceName":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for LogAnalyticsWorkspaceName"
+            }
+        },
+        "ResourceGroup":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for ResourceGroup"
+            }
+        },
+        "SubscriptionID":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for SubscriptionID"
+            }
+        },
         "WatchlistName":  {
             "type":  "string",
             "metadata":  {
@@ -50,6 +68,18 @@
                             "defaultValue":  {
                             },
                             "type":  "Object"
+                        },
+                        "LogAnalyticsWorkspaceName":  {
+                            "defaultValue":  "[parameters('LogAnalyticsWorkspaceName')]",
+                            "type":  "string"
+                        },
+                        "ResourceGroup":  {
+                            "defaultValue":  "[parameters('ResourceGroup')]",
+                            "type":  "string"
+                        },
+                        "SubscriptionID":  {
+                            "defaultValue":  "[parameters('SubscriptionID')]",
+                            "type":  "string"
                         },
                         "WatchlistName":  {
                             "defaultValue":  "[parameters('WatchlistName')]",
@@ -180,6 +210,22 @@
                             },
                             "type":  "Foreach"
                         },
+                        "InitializeVariable-AclRequestBody":  {
+                            "runAfter":  {
+                                "InitializeVariable-URL":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "AclRequestBody",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
                         "InitializeVariable-AllowedIPs":  {
                             "runAfter":  {
                                 "RunQueryAndListResults-Watchlist":  [
@@ -210,25 +256,9 @@
                                 ]
                             }
                         },
-                        "Initialize_variable":  {
-                            "runAfter":  {
-                                "InitializeVariable-URL":  [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type":  "InitializeVariable",
-                            "inputs":  {
-                                "variables":  [
-                                    {
-                                        "name":  "AclRequestBody",
-                                        "type":  "string"
-                                    }
-                                ]
-                            }
-                        },
                         "RunQueryAndListResults-Watchlist":  {
                             "runAfter":  {
-                                "Initialize_variable":  [
+                                "InitializeVariable-AclRequestBody":  [
                                     "Succeeded"
                                 ]
                             },
@@ -243,10 +273,10 @@
                                 "method":  "post",
                                 "path":  "/queryData",
                                 "queries":  {
-                                    "resourcegroups":  "ContosoSOC",
-                                    "resourcename":  "Sentinel",
+                                    "resourcegroups":  "@parameters('ResourceGroup')",
+                                    "resourcename":  "@parameters('LogAnalyticsWorkspaceName')",
                                     "resourcetype":  "Log Analytics Workspace",
-                                    "subscriptions":  "ea7a75b1-757b-458a-a635-f19443dc27d0",
+                                    "subscriptions":  "@parameters('SubscriptionID')",
                                     "timerange":  "Last 24 hours"
                                 }
                             }
